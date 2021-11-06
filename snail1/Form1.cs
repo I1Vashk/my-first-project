@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.IO;
 
 namespace snail1
 {
@@ -20,8 +21,9 @@ namespace snail1
         int mov; // 1 - право 2 - лево 3 - вверх 4 - вниз
         int score = 0;
         int ST;
+        int HighScore;
         Random rmd = new Random();
-        
+
         public Form1()
         {
             InitializeComponent();
@@ -42,7 +44,7 @@ namespace snail1
             int i;
             for (i = 198; i >= 0; i--)
             {
-                if (stop_game == true)
+                if (stop_game)
                 {
                     break;
                 }
@@ -56,7 +58,7 @@ namespace snail1
                     p[0].X = p[1].X - 10;  // движение лево
                     if (p[0].X < 0)
                     {
-                        p[0].X += 500; // переход на новую границу
+                        p[0].X += 500;
                     }
                     p[0].Y = p[1].Y;
                     break;
@@ -85,32 +87,58 @@ namespace snail1
                     }
                     break;
             }
-           
+
+            label1.Text = score.ToString();
+            StreamReader ReadHS = new StreamReader("HighScore.txt");
+            string b = ReadHS.ReadLine();
+            label4.Text = b;
+            HighScore = Convert.ToInt32(b);
+            ReadHS.Close();
+
+            //label5.Text = b; // 
+            if (score >= HighScore)
+                //HighScore = score;
+            try
+            {
+                File.WriteAllText("HighScore.txt", null);
+                StreamWriter WriteHS = new StreamWriter("HighScore.txt", true, Encoding.ASCII);
+                WriteHS.WriteLine(score);
+                WriteHS.Close();
+            }
+            catch (Exception o)
+            {
+                MessageBox.Show(o.Message);
+            }
+            finally
+            {
+                //label4.Text = HighScore.ToString();
+            }
+
             for ( i = 0; i < len; i++)
             {
-                if (len % 2 == 0)
+                if (i % 2 == 0)
                 {
-                    SolidBrush body1 = new SolidBrush(Color.Yellow);
+                    SolidBrush body1 = new SolidBrush(Color.HotPink);
                     e.Graphics.FillRectangle(body1, p[i].X, p[i].Y, 10, 10);
                 }
-                else 
+                else
                 {
-                    SolidBrush body2 = new SolidBrush(Color.LightPink);
+                    SolidBrush body2 = new SolidBrush(Color.Pink);
                     e.Graphics.FillRectangle(body2, p[i].X, p[i].Y, 10, 10);
                 }
             }
 
-            SolidBrush head = new SolidBrush(Color.HotPink); // отрисовка головы
+            SolidBrush head = new SolidBrush(Color.DeepPink);
             e.Graphics.FillRectangle(head, p[0].X - 2, p[0].Y - 2, 13, 13);
 
-            SolidBrush food_draw = new SolidBrush(Color.White); // отрисовка еды
+            SolidBrush food_draw = new SolidBrush(Color.White);
             e.Graphics.FillEllipse(food_draw, food.X, food.Y, 12, 12);
 
-            SolidBrush super_food_draw = new SolidBrush(Color.Lime); // отрисовка супер еды
+            SolidBrush super_food_draw = new SolidBrush(Color.Lime); 
             e.Graphics.FillEllipse(super_food_draw, super_food.X, super_food.Y, 13, 13);
 
 
-            if (p[0].X == food.X && p[0].Y == food.Y) // генератор еды
+            if (p[0].X == food.X && p[0].Y == food.Y) 
             {
                 len++;
                 food.X = rmd.Next(0, 50) * 10;
@@ -123,7 +151,7 @@ namespace snail1
                 else timer1.Interval = 5;
             }
 
-            if (p[0].X == super_food.X && p[0].Y == super_food.Y) // Генератор супер еды
+            if (p[0].X == super_food.X && p[0].Y == super_food.Y)
             {
                 len = len + 5;
                 score = score + 5;
@@ -134,7 +162,7 @@ namespace snail1
                 }
                 else timer1.Interval = 10;
             }
-
+            
             for (int k = 1; k < len; k++)
             {
                 if(stop_game == true)
@@ -168,10 +196,9 @@ namespace snail1
             {
                 timer1.Stop();
             }
-            label1.Text = score.ToString();
         }
 
-        private void Form1_CheckKeys(object sender, KeyEventArgs button) // движение (чтение нажатия)
+        private void Form1_CheckKeys(object sender, KeyEventArgs button)
         {
             switch (button.KeyCode)
             {
@@ -187,6 +214,33 @@ namespace snail1
                 case Keys.S or Keys.Down:
                     mov = 4;
                     break;
+                case Keys.Escape:
+                    timer1.Stop();
+                    STimer.Stop();
+                    DialogResult game_off = MessageBox.Show("Игра стоит на паузе.\nЖелаете выйти?", "Пауза", MessageBoxButtons.YesNo);
+                    if (game_off == System.Windows.Forms.DialogResult.Yes)
+                    {
+                        Hide();
+                        FormMenu start = new FormMenu();
+                        start.ShowDialog();
+                    }
+                    else
+                    {
+                        timer1.Start();
+                        STimer.Start();
+                    }
+                    break;
+                default:
+                    timer1.Stop();
+                    STimer.Stop();
+                    DialogResult Uprav = MessageBox.Show("Управление на стрелочки или WASD", "Чел, управление...", MessageBoxButtons.OK);
+                    if (Uprav == System.Windows.Forms.DialogResult.OK)
+                    {
+                        timer1.Start();
+                        STimer.Start();
+                    }
+                    break;
+
             }
         }
 
@@ -200,7 +254,6 @@ namespace snail1
                 super_food.Y = rmd.Next(0, 50) * 10;
             }
         }
-        private void ScorePanel_Paint(object sender, PaintEventArgs e) { }
-        private void label2_Click(object sender,EventArgs e ) { }
+
     }
 }
